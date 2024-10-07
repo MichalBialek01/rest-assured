@@ -4,21 +4,19 @@ import com.example.restassuredtests.config.VideoGameConfig;
 import com.example.restassuredtests.endpoints.VideoGameEndpoints;
 import com.example.testClasses.VideoGame;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.matcher.RestAssuredMatchers;
 import io.restassured.module.jsv.JsonSchemaValidator;
 import io.restassured.response.Response;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Description;
-import org.springframework.http.HttpHeaders;
+
+import java.time.LocalDateTime;
 
 import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.lessThan;
 
-@Slf4j
 public class VideoGameTests extends VideoGameConfig {
 
 
@@ -82,7 +80,8 @@ public class VideoGameTests extends VideoGameConfig {
 //    https://www.jsonschema2pojo.org/
     @Test
     public void testVideoGameSerializationByJson() {
-        VideoGame testVideoGame = new VideoGame("Comedy", "Shrek", "Mature", "2004-04-22", 99);
+        VideoGame testVideoGame = new VideoGame("Comedy", "Shrek", "Mature",  "2002-01-02", 99);
+
 
         given().body(testVideoGame)
                 .when().post(VideoGameEndpoints.ALL_VIDEO_GAMES)
@@ -100,47 +99,51 @@ public class VideoGameTests extends VideoGameConfig {
                 .when()
                 .get("/videogame/{videoGameId}")
                 .then()
-                .body(RestAssuredMatchers.matchesXsdInClasspath("VideoGameXSD.xsd"));
+                .body(RestAssuredMatchers.matchesXsdInClasspath("VideoGameSchema.xsd"));
     }
 
     //    Walidacja z JSON Schema (sprawdzanie czy otrzymany JSON pokrywa się z get)
 //    https://json-schema.org/learn/getting-started-step-by-step
+//    Wymagana zależność json-schema-validator
+//    Date ustawiono jako regex
 //    JSON to JSON Schema
     @Test
     public void testVideoGameJsonSchema() {
         given()
                 .pathParam("videoGameId", 4)
                 .accept(ContentType.JSON.toString())
-        .when()
-                .get("videogame/{videoGameId}")
-        .then()
-                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("VideoGameJSON.json"));
+                .when()
+                .get(VideoGameEndpoints.VIDEO_GAME)
+                .then()
+                .body(JsonSchemaValidator.matchesJsonSchemaInClasspath("VideoGameSchema.json"));
     }
 //    Pobieranie JSON i porównywanie z klasą POJO
 
     @Test
-    public void convertJsonToPojo(){
+    public void convertJsonToPojo() {
         Response response =
                 given()
                         .pathParam("videoGameId", 4)
-                .when()
+                        .when()
                         .get(VideoGameEndpoints.VIDEO_GAME);
 //        Działa bo mamy noArgsConstructor - serializacja
         VideoGame videoGame = response.getBody().as(VideoGame.class);
     }
 
-//    Pomiar czasu
+    //    Pomiar czasu
 //    https://github.com/rest-assured/rest-assured/wiki/Usage#measuring-response-time
     @Test
-    public void captureResponseTime(){
+    public void captureResponseTime() {
         long responseTime =
                 get(VideoGameEndpoints.ALL_VIDEO_GAMES).time();
         System.out.println(responseTime);
     }
+
     @Test
-    public void asserOnResponseTime(){
+    public void asserOnResponseTime() {
         get(VideoGameEndpoints.ALL_VIDEO_GAMES)
                 .then().assertThat().time(lessThan(2000L));
     }
+
 
 }

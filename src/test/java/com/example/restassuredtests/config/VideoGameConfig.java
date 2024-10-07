@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
+import static org.hamcrest.Matchers.lessThan;
+
 public class VideoGameConfig {
 
     public static final String BASE_URL ="https://www.videogamedb.uk/";
@@ -29,6 +31,7 @@ public class VideoGameConfig {
 
         RestAssured.responseSpecification = new ResponseSpecBuilder()
                 .expectStatusCode(200)
+                .expectResponseTime(lessThan(2000L))
                 .build();
 
     }
